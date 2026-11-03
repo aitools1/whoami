@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>vetmo@portfolio:~</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --bg-panel: #0d131c;
+    --text: #c5d1e5;
+    --text-dim: #5b6b85;
+    --accent: #7aa2f7;      /* холодный синий */
+    --accent2: #e0af68;     /* тёплое золото — предупреждения */
+    --err: #f7768e;
+    --ok: #9ece6a;
+    --border: #1c2533;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+    font-size: 15px;
+    min-height: 100%;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(122,162,247,0.08), transparent),
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  }
+
+  /* ===== Окно терминала ===== */
+  .terminal {
+    width: 100%;
+    max-width: 760px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(122,162,247,0.05);
+    overflow: hidden;
+  }
+
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #0b0f17;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+
+  .titlebar .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r { background: #f7768e; }
+  .dot.y { background: #e0af68; }
+  .dot.g { background: #9ece6a; }
+
+  .titlebar .title {
+    flex: 1;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+
+  .screen {
+    padding: 18px 18px 8px;
+    min-height: 420px;
+    line-height: 1.65;
+    overflow-y: auto;
+    max-height: 75vh;
+  }
+
+  .screen::-webkit-scrollbar { width: 8px; }
+  .screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ===== Типографика вывода ===== */
+  .prompt-line { white-space: pre-wrap; word-break: break-word; }
+  .prompt { color: var(--ok); }
+  .prompt .path { color: var(--accent); }
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--accent);
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .out { white-space: pre-wrap; word-break: break-word; margin: 2px 0 6px; }
+  .dim { color: var(--text-dim); }
+  .blue { color: var(--accent); }
+  .gold { color: var(--accent2); }
+  .ok { color: var(--ok); }
+  .err { color: var(--err); }
+  .hr { color: var(--border); }
+
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+  a:hover { color: #b4c9ff; border-bottom-style: solid; }
+
+  .cmd-table td { padding: 2px 14px 2px 0; vertical-align: top; }
+  .cmd-table .cmd { color: var(--ok); white-space: nowrap; }
+
+  /* ===== Строка ввода ===== */
+  .input-line { display: flex; align-items: center; padding: 4px 0 8px; }
+  .input-line .prompt { margin-right: 8px; white-space: nowrap; }
+  #cmd-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font: inherit;
+    caret-color: transparent;
+  }
+
+  /* ===== Подвал ===== */
+  .footer {
+    max-width: 760px;
+    width: 100%;
+    margin-top: 14px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .footer .keys b { color: var(--text); font-weight: 400; }
+
+  @media (max-width: 560px) {
+    body { font-size: 13.5px; padding: 12px 8px 40px; }
+    .screen { padding: 12px 12px 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="terminal">
+  <div class="titlebar">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="title">vetmo@portfolio: ~ — bash</span>
+    <span style="width:41px"></span>
+  </div>
+  <div class="screen" id="screen">
+    <div class="out" id="boot"></div>
+    <div id="output"></div>
+    <div class="input-line" id="input-line" style="display:none">
+      <span class="prompt">vetmo@<span class="path">~</span>$</span>
+      <input id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span class="keys">команды: <b>help</b> · <b>about</b> · <b>projects</b> · <b>contact</b> · <b>clear</b> — вводите снизу или <b>Tab</b> для подсказки</span>
+</div>
+
+<script>
+(function () {
+  var screen = document.getElementById('screen');
+  var output = document.getElementById('output');
+  var input = document.getElementById('cmd-input');
+  var inputLine = document.getElementById('input-line');
+  var boot = document.getElementById('boot');
+
+  var history = [];
+  var histIdx = -1;
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function print(html, cls) {
+    var d = document.createElement('div');
+    d.className = 'out' + (cls ? ' ' + cls : '');
+    d.innerHTML = html;
+    output.appendChild(d);
+    screen.scrollTop = screen.scrollHeight;
+    return d;
+  }
+
+  function printPrompt(cmd) {
+    print('<span class="prompt">vetmo@<span class="path">~</span>$</span> ' + esc(cmd));
+  }
+
+  // ===== Данные =====
+
+  var SECTIONS = {};
+
+  SECTIONS.help = function () {
+    var rows = [
+      ['help',     'этот список'],
+      ['about',    'кто я'],
+      ['projects', 'избранные работы'],
+      ['contact',  'связаться'],
+      ['clear',    'очистить экран']
+    ];
+    var t = '<table class="cmd-table">';
+    for (var i = 0; i < rows.length; i++) {
+      t += '<tr><td class="cmd">' + rows[i][0] + '</td><td class="dim">' + rows[i][1] + '</td></tr>';
+    }
+    print(t + '</table>');
+  };
+
+  SECTIONS.about = function () {
+    print([
+      '<span class="dim">## identity</span>',
+      '',
+      '  имя        <span class="dim">:</span> <span class="gold">vetmo</span>',
+      '  стек       <span class="dim">:</span> Python · Java · C# · Rust',
+      '  сфера      <span class="dim">:</span> десктоп-утилиты, чекеры, моды для игр, скрипты инфраструктуры',
+      '',
+      '<span class="dim">## принципы</span>',
+      '',
+      '  1. утилита должна решать одну задачу и делать это хорошо',
+      '  2. код читают чаще, чем пишут',
+      '  3. All is dust. <span class="dim">(иногда — к лучшему: рефакторинг обязателен)</span>',
+      ''
+    ].join('\n'));
+  };
+
+  SECTIONS.projects = function () {
+    print('<span class="dim">## зарегистрированные записи: 2</span>\n');
+    print([
+      '<span class="blue">01  ChaosMarineMod</span> <span class="dim">· c# · harmony · .net 4.8</span>',
+      '    мод для Warhammer 40k: Rogue Trader: путь Аримана, десант Хаоса,',
+      '    тактический ИИ. Harmony-патчи + нативная система модов Owlcat.',
+      '',
+      '<span class="blue">02  ZomboidSaveGuard</span> <span class="dim">· powershell · windows</span>',
+      '    автоматические бэкапы и восстановление сохранений Project Zomboid',
+      '    в один клик на Windows. ',
+      '    <span class="dim">репозиторий — </span><a href="https://github.com/aitools1/zomboid-save-guard" target="_blank" rel="noopener">aitools1/zomboid-save-guard</a>',
+      ''
+    ].join('\n'));
+  };
+
+  SECTIONS.contact = function () {
+    print([
+      '<span class="dim">## каналы связи</span>',
+      '',
+      '  github    <span class="dim">:</span> <a href="https://github.com/aitools1" target="_blank" rel="noopener">github.com/aitools1</a>',
+      '  mail      <span class="dim">:</span> <a href="mailto:devprotonme1@proton.me">devprotonme1@proton.me</a>',
+      '',
+      '<span class="dim">// отвечаю без ритуалов и призывов демонов. обычно.</span>',
+      ''
+    ].join('\n'));
+  };
+
+  SECTIONS['sudo'] = function () {
+    print('<span class="err">vetmo is not in the sudoers file. This incident will be reported.</span>');
+  };
+
+  SECTIONS['whoami'] = function () {
+    print('<span class="gold">vetmo</span> <span class="dim">из секты «Работает — не трогай»</span>');
+  };
+
+  SECTIONS['ls'] = function () {
+    print('<span class="blue">about/  projects/  contact/  .secrets/  imperial_truth.pdf</span>');
+  };
+
+  // ===== Обработка команд =====
+
+  var COMMANDS = {};
+  var names = Object.keys(SECTIONS);
+  COMMANDS['clear'] = function () { output.innerHTML = ''; };
+  COMMANDS['exit'] = function () {
+    print('<span class="dim">дверь отсека закрыта с той стороны. выхода нет — только проекты.</span>');
+  };
+
+  function run(raw) {
+    var cmd = raw.trim().toLowerCase();
+    printPrompt(raw);
+    if (!cmd) return;
+    history.push(raw);
+    histIdx = history.length;
+
+    if (SECTIONS[cmd]) { SECTIONS[cmd](); return; }
+    if (COMMANDS[cmd]) { COMMANDS[cmd](); return; }
+
+    print('<span class="err">bash: ' + esc(cmd) + ': команда не найдена</span> <span class="dim">— введите</span> <span class="ok">help</span>');
+  }
+
+  // Tab-автодополнение
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      run(input.value);
+      input.value = '';
+    } else if (e.key === 'ArrowUp') {
+      if (histIdx > 0) { histIdx--; input.value = history[histIdx] || ''; }
+      e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+      if (histIdx < history.length) { histIdx++; input.value = history[histIdx] || ''; }
+      e.preventDefault();
+    } else if (e.key === 'Tab') {
+      var v = input.value.trim().toLowerCase();
+      if (v) {
+        var match = names.concat(Object.keys(COMMANDS)).filter(function (n) { return n.indexOf(v) === 0; });
+        if (match.length === 1) { input.value = match[0]; }
+        else if (match.length > 1) { print('<span class="dim">' + match.join('  ') + '</span>'); }
+      }
+      e.preventDefault();
+    }
+  });
+
+  // Клик по экрану — фокус в ввод
+  document.querySelector('.terminal').addEventListener('click', function (e) {
+    if (window.getSelection().toString()) return;
+    input.focus({ preventScroll: true });
+  });
+
+  // ===== Boot-последовательность =====
+
+  var bootLines = [
+    ['dim',  '[    0.000000] ядро portfolio-v0.1 инициализировано'],
+    ['dim',  '[    0.142033] загрузка модулей: about.projects.contact .... ok'],
+    ['dim',  '[    0.318402] профиль подключён .... ok'],
+    ['gold', '[    0.441028] WARNING: veil is thin. соблюдайте осторожность.'],
+    ['',     ''],
+    ['blue', '  ██╗   ██╗███████╗██████╗ ███████╗███████╗'],
+    ['blue', '  ██║   ██║██╔════╝██╔══██╗██╔════╝██╔════╝'],
+    ['blue', '  ██║   ██║█████╗  ██████╔╝█████╗  █████╗  '],
+    ['blue', '  ╚██║ ██╔╝██╔══╝  ██╔══██╗██╔══╝  ██╔══╝  '],
+    ['blue', '   ╚████╔╝ ███████╗██║  ██║███████╗███████╗'],
+    ['blue', '    ╚═══╝  ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝'],
+    ['',     ''],
+    ['dim',  'введите ']
+  ];
+
+  var li = 0;
+  var typing = true;
+
+  function typeBoot() {
+    if (li < bootLines.length) {
+      var item = bootLines[li];
+      var d = document.createElement('div');
+      d.className = 'out ' + item[0];
+      d.innerHTML = item[1];
+      boot.appendChild(d);
+      li++;
+      screen.scrollTop = screen.scrollHeight;
+      setTimeout(typeBoot, 90);
+    } else {
+      var last = boot.lastChild;
+      last.innerHTML = 'введите <span class="ok">help</span>, чтобы посмотреть доступные команды';
+      typing = false;
+      inputLine.style.display = 'flex';
+      input.focus();
+      run('about');
+    }
+  }
+
+  typeBoot();
+})();
+</script>
+</body>
+</html>
