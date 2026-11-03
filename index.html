@@ -50,6 +50,24 @@
     display: block;
   }
 
+  /* ===== Подсветка за терминалом (как на референсе) ===== */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 420px 320px at 18% 12%, rgba(217,119,87,0.13), transparent 65%),
+      radial-gradient(ellipse 460px 340px at 82% 20%, rgba(122,162,247,0.11), transparent 65%),
+      radial-gradient(ellipse 500px 380px at 50% 95%, rgba(224,175,104,0.07), transparent 70%);
+    animation: ambient-shift 14s ease-in-out infinite alternate;
+  }
+  @keyframes ambient-shift {
+    0%   { filter: hue-rotate(0deg) brightness(1); }
+    50%  { filter: hue-rotate(-8deg) brightness(1.15); }
+    100% { filter: hue-rotate(6deg) brightness(0.95); }
+  }
+
   .terminal, .footer { position: relative; z-index: 1; }
 
   /* ===== Окно терминала ===== */
@@ -126,7 +144,7 @@
   .cmd-table .cmd { color: var(--ok); white-space: nowrap; }
 
   /* ===== Строка ввода ===== */
-  .input-line { display: flex; align-items: center; padding: 4px 0 8px; }
+  .input-line { display: flex; align-items: center; padding: 4px 0 4px; }
   .input-line .prompt { margin-right: 8px; white-space: nowrap; }
   #cmd-input {
     flex: 1;
@@ -136,6 +154,173 @@
     color: var(--text);
     font: inherit;
     caret-color: transparent;
+  }
+
+  /* ===== Кликабельные чипы-команды ===== */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0 14px;
+    border-top: 1px dashed var(--border);
+    margin-top: 8px;
+  }
+  .chip {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: 13px;
+    padding: 5px 14px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s, box-shadow .15s;
+    user-select: none;
+  }
+  .chip:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(122,162,247,0.08);
+    box-shadow: 0 0 12px rgba(122,162,247,0.15);
+  }
+  .chip:active { transform: translateY(1px); }
+  .chip.gold:hover {
+    border-color: var(--accent2);
+    background: rgba(224,175,104,0.08);
+    box-shadow: 0 0 12px rgba(224,175,104,0.15);
+  }
+
+  /* ===== Карточка-хедер профиля ===== */
+  .profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(122,162,247,0.05), rgba(217,119,87,0.04));
+  }
+  .avatar {
+    width: 72px;
+    height: 72px;
+    flex: 0 0 72px;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    background: #0b0f17;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 18px rgba(122,162,247,0.2), inset 0 0 12px rgba(122,162,247,0.08);
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar .sym {
+    font-size: 24px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .avatar .sym2 {
+    font-size: 13px;
+    color: var(--accent2);
+    line-height: 1;
+    margin-top: 3px;
+  }
+  .avatar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(122,162,247,0.15) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: avatar-scan 4.5s ease-in-out infinite;
+  }
+  @keyframes avatar-scan {
+    0%   { transform: translateX(-100%); }
+    60%  { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+  }
+  .profile .info { flex: 1; min-width: 0; }
+  .profile .name {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .profile .name .cursor-sm {
+    display: inline-block;
+    width: 9px; height: 17px;
+    background: var(--accent);
+    vertical-align: -3px;
+    margin-left: 6px;
+    animation: blink 1s step-end infinite;
+  }
+  .profile .tagline {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-top: 4px;
+    white-space: pre-wrap;
+  }
+  .profile .cta {
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    background: rgba(122,162,247,0.1);
+    color: var(--text);
+    font: inherit;
+    font-size: 13.5px;
+    padding: 10px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, box-shadow .15s, transform .15s;
+  }
+  .profile .cta:hover {
+    background: rgba(122,162,247,0.2);
+    box-shadow: 0 0 14px rgba(122,162,247,0.25);
+    transform: translateY(-1px);
+  }
+  .profile .cta:active { transform: translateY(1px); }
+  @media (max-width: 560px) {
+    .profile { flex-wrap: wrap; gap: 12px; }
+    .profile .cta { width: 100%; }
+  }
+  .social-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 10px 0 6px;
+    max-width: 480px;
+  }
+  .social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(13,19,28,0.6);
+    color: var(--text);
+    text-decoration: none;
+    font: inherit;
+    font-size: 14px;
+    transition: border-color .15s, transform .15s, box-shadow .15s, background .15s;
+  }
+  .social-btn .sym { color: var(--accent); }
+  .social-btn:hover {
+    border-color: var(--accent);
+    background: rgba(122,162,247,0.09);
+    box-shadow: 0 0 16px rgba(122,162,247,0.18);
+    transform: translateY(-2px);
+  }
+  .social-btn.gold .sym { color: var(--accent2); }
+  .social-btn.gold:hover {
+    border-color: var(--accent2);
+    background: rgba(224,175,104,0.09);
+    box-shadow: 0 0 16px rgba(224,175,104,0.18);
+  }
+  @media (max-width: 560px) {
+    .social-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
   /* ===== Подвал ===== */
@@ -158,6 +343,7 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
+<div class="ambient"></div>
 
 <div class="terminal">
   <div class="titlebar">
@@ -166,11 +352,28 @@
     <span style="width:41px"></span>
   </div>
   <div class="screen" id="screen">
+    <div class="profile">
+      <div class="avatar"><span class="sym">λ</span><span class="sym2">v·</span></div>
+      <div class="info">
+        <div class="name">я vetmo<span class="cursor-sm"></span></div>
+        <div class="tagline">python · java · c# · rust
+десктоп-утилиты, чекеры, моды для игр, скрипты инфраструктуры</div>
+      </div>
+      <button class="cta" id="cta-about">познакомиться со мной →</button>
+    </div>
     <div class="out" id="boot"></div>
     <div id="output"></div>
     <div class="input-line" id="input-line" style="display:none">
       <span class="prompt">vetmo@<span class="path">~</span>$</span>
       <input id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+    </div>
+    <div class="chips" id="chips" style="display:none">
+      <button class="chip" data-cmd="about">обо мне</button>
+      <button class="chip" data-cmd="projects">мои проекты</button>
+      <button class="chip" data-cmd="contact">контакты</button>
+      <button class="chip" data-cmd="help">справка</button>
+      <button class="chip" data-cmd="clear">очистить</button>
+      <button class="chip gold" data-url="https://github.com/aitools1" data-label="github">github ↗</button>
     </div>
   </div>
 </div>
@@ -189,6 +392,8 @@
 
   var history = [];
   var histIdx = -1;
+  var typingQueue = null;   // активная печать секции
+  var typingToken = 0;      // токен для отмены предыдущей печати
 
   function esc(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -203,8 +408,82 @@
     return d;
   }
 
+  function printNode(node) {
+    var d = document.createElement('div');
+    d.className = 'out';
+    d.appendChild(node);
+    output.appendChild(d);
+    screen.scrollTop = screen.scrollHeight;
+    return d;
+  }
+
   function printPrompt(cmd) {
     print('<span class="prompt">vetmo@<span class="path">~</span>$</span> ' + esc(cmd));
+  }
+
+  // ===== Печать секции с эффектом набора текста =====
+
+  function typeSection(lines, done) {
+    var token = ++typingToken;
+    var li = 0;
+    var target = document.createElement('div');
+    output.appendChild(target);
+
+    function nextLine() {
+      if (token !== typingToken) { return; }   // печать отменена новой командой
+      if (li >= lines.length) {
+        printAccept(target);
+        if (done) done();
+        return;
+      }
+      var item = lines[li];
+      var d = document.createElement('div');
+      d.className = 'out' + (item.cls ? ' ' + item.cls : '');
+      target.appendChild(d);
+      screen.scrollTop = screen.scrollHeight;
+      if (!item.text) { li++; setTimeout(nextLine, 30); return; }
+
+      // посимвольный набор
+      typeText(d, item.text, 0, item.instant ? Infinity : 8, function () {
+        li++;
+        setTimeout(nextLine, 60);
+      });
+    }
+
+    function typeText(el, html, pos, speed, cb) {
+      // печатаем по HTML-тегам целиком, текст — по символам
+      var m = /<[^>]+>/.exec(html.substring(pos));
+      if (m && m.index === 0) {
+        el.innerHTML += m[0];
+        pos += m[0].length;
+        typeText(el, html, pos, speed, cb);
+        return;
+      }
+      var rest = html.substring(pos);
+      var nextTag = rest.indexOf('<');
+      var plain = nextTag === -1 ? rest : rest.substring(0, nextTag);
+      if (plain.length === 0) {
+        if (nextTag === -1) { cb(); return; }
+        typeText(el, html, pos, speed, cb);
+        return;
+      }
+      el.innerHTML += esc(plain.charAt(0));
+      setTimeout(function () {
+        if (token !== typingToken) { return; }
+        typeText(el, html, pos + 1, speed, cb);
+      }, speed);
+    }
+
+    nextLine();
+  }
+
+  function printAccept(target) {
+    var d = document.createElement('div');
+    d.className = 'out accept';
+    d.innerHTML = '<span class="ok">ACCEPT</span> <span class="dim">' + new Date().toLocaleTimeString('ru-RU') + '</span>';
+    if (target && target.parentNode) { target.parentNode.insertBefore(d, target.nextSibling); }
+    else { output.appendChild(d); }
+    screen.scrollTop = screen.scrollHeight;
   }
 
   // ===== Данные =====
@@ -212,84 +491,70 @@
   var SECTIONS = {};
 
   SECTIONS.help = function () {
-    var rows = [
-      ['help',     'этот список'],
-      ['about',    'кто я'],
-      ['projects', 'избранные работы'],
-      ['contact',  'связаться'],
-      ['clear',    'очистить экран']
+    return [
+      { text: '<span class="dim">## доступные команды</span>' },
+      { text: '' },
+      { text: '<span class="ok">help</span>      <span class="dim">этот список</span>' },
+      { text: '<span class="ok">about</span>     <span class="dim">кто я</span>' },
+      { text: '<span class="ok">projects</span>  <span class="dim">избранные работы</span>' },
+      { text: '<span class="ok">contact</span>   <span class="dim">связаться</span>' },
+      { text: '<span class="ok">clear</span>     <span class="dim">очистить экран</span>' }
     ];
-    var t = '<table class="cmd-table">';
-    for (var i = 0; i < rows.length; i++) {
-      t += '<tr><td class="cmd">' + rows[i][0] + '</td><td class="dim">' + rows[i][1] + '</td></tr>';
-    }
-    print(t + '</table>');
   };
 
   SECTIONS.about = function () {
-    print([
-      '<span class="dim">## identity</span>',
-      '',
-      '  имя        <span class="dim">:</span> <span class="gold">vetmo</span>',
-      '  стек       <span class="dim">:</span> Python · Java · C# · Rust',
-      '  сфера      <span class="dim">:</span> десктоп-утилиты, чекеры, моды для игр, скрипты инфраструктуры',
-      '',
-      '<span class="dim">## принципы</span>',
-      '',
-      '  1. утилита должна решать одну задачу и делать это хорошо',
-      '  2. код читают чаще, чем пишут',
-      '  3. All is dust. <span class="dim">(иногда — к лучшему: рефакторинг обязателен)</span>',
-      ''
-    ].join('\n'));
+    return [
+      { text: '<span class="gold">Превращаю смелые идеи в работающий софт. Быстро, гибко и с помощью AI.</span>' },
+      { text: '' },
+      { text: 'Я практик: использую нейросети как ускоритель разработки,' },
+      { text: 'чтобы проверять гипотезы за часы, а не месяцы.' },
+      { text: '' },
+      { text: '  <span class="ok">[+]</span> <b>Геймдев &amp; Моды:</b>' },
+      { text: '      Создаю модификации, которые дают любимым играм второе дыхание.' },
+      { text: '' },
+      { text: '  <span class="ok">[+]</span> <b>Десктопный инструментарий:</b>' },
+      { text: '      Разрабатываю утилиты под Windows для оптимизации процессов,' },
+      { text: '      автоматизации рутины и комфортной работы с системой.' },
+      { text: '' },
+      { text: '  <span class="ok">[+]</span> <b>Стек &amp; Инструменты:</b>' },
+      { text: '      <span class="blue">•</span> AI-Assisted Dev <span class="dim">(LLM, Prompt Engineering)</span>' },
+      { text: '      <span class="blue">•</span> Python / C# / Lua' },
+      { text: '      <span class="blue">•</span> Windows API / Скриптинг автоматизации' },
+      { text: '' },
+      { text: 'Открыт к интересным проектам и экспериментам.' },
+      { text: '<span class="hr">────────────────────────────────────────────────────────</span>' },
+      { text: '&gt; Введите <span class="ok">\'projects\'</span>, чтобы увидеть работы в действии.' }
+    ];
   };
 
   SECTIONS.projects = function () {
-    print('<span class="dim">## зарегистрированные записи: 2</span>\n');
-    print([
-      '<span class="blue">01  ChaosMarineMod</span> <span class="dim">· c# · harmony · .net 4.8</span>',
-      '    мод для Warhammer 40k: Rogue Trader: путь Аримана, десант Хаоса,',
-      '    тактический ИИ. Harmony-патчи + нативная система модов Owlcat.',
-      '',
-      '<span class="blue">02  ZomboidSaveGuard</span> <span class="dim">· powershell · windows</span>',
-      '    автоматические бэкапы и восстановление сохранений Project Zomboid',
-      '    в один клик на Windows. ',
-      '    <span class="dim">репозиторий — </span><a href="https://github.com/aitools1/zomboid-save-guard" target="_blank" rel="noopener">aitools1/zomboid-save-guard</a>',
-      ''
-    ].join('\n'));
+    var lines = [
+      { text: '<span class="dim">## зарегистрированные записи: 2</span>' },
+      { text: '' },
+      { text: '<span class="blue">01  ChaosMarineMod</span> <span class="dim">· c# · harmony · .net 4.8</span>' },
+      { text: '    мод для Warhammer 40k: Rogue Trader: путь Аримана, десант Хаоса,' },
+      { text: '    тактический ИИ. Harmony-патчи + нативная система модов Owlcat.' },
+      { text: '' },
+      { text: '<span class="blue">02  ZomboidSaveGuard</span> <span class="dim">· powershell · windows</span>' },
+      { text: '    автоматические бэкапы и восстановление сохранений Project Zomboid' },
+      { text: '    в один клик на Windows.' }
+    ];
+    return lines;
   };
 
   SECTIONS.contact = function () {
-    print([
-      '<span class="dim">## каналы связи</span>',
-      '',
-      '  github    <span class="dim">:</span> <a href="https://github.com/aitools1" target="_blank" rel="noopener">github.com/aitools1</a>',
-      '  mail      <span class="dim">:</span> <a href="mailto:devprotonme1@proton.me">devprotonme1@proton.me</a>',
-      '',
-      '<span class="dim">// отвечаю без ритуалов и призывов демонов. обычно.</span>',
-      ''
-    ].join('\n'));
-  };
-
-  SECTIONS['sudo'] = function () {
-    print('<span class="err">vetmo is not in the sudoers file. This incident will be reported.</span>');
-  };
-
-  SECTIONS['whoami'] = function () {
-    print('<span class="gold">vetmo</span> <span class="dim">из секты «Работает — не трогай»</span>');
-  };
-
-  SECTIONS['ls'] = function () {
-    print('<span class="blue">about/  projects/  contact/  .secrets/  imperial_truth.pdf</span>');
+    var lines = [
+      { text: '<span class="dim">## где меня найти</span>' },
+      { text: '' },
+      { text: '  github    <span class="dim">:</span> <a href="https://github.com/aitools1" target="_blank" rel="noopener">github.com/aitools1</a>' },
+      { text: '  mail      <span class="dim">:</span> <a href="mailto:devprotonme1@proton.me">devprotonme1@proton.me</a>' },
+      { text: '' },
+      { text: '<span class="dim">// отвечаю без ритуалов и призывов демонов. обычно.</span>' }
+    ];
+    return { lines: lines, social: true };
   };
 
   // ===== Обработка команд =====
-
-  var COMMANDS = {};
-  var names = Object.keys(SECTIONS);
-  COMMANDS['clear'] = function () { output.innerHTML = ''; };
-  COMMANDS['exit'] = function () {
-    print('<span class="dim">дверь отсека закрыта с той стороны. выхода нет — только проекты.</span>');
-  };
 
   function run(raw) {
     var cmd = raw.trim().toLowerCase();
@@ -298,13 +563,64 @@
     history.push(raw);
     histIdx = history.length;
 
-    if (SECTIONS[cmd]) { SECTIONS[cmd](); return; }
-    if (COMMANDS[cmd]) { COMMANDS[cmd](); return; }
+    if (cmd === 'clear') { output.innerHTML = ''; return; }
+    if (cmd === 'exit') {
+      print('<span class="dim">дверь отсека закрыта с той стороны. выхода нет — только проекты.</span>');
+      return;
+    }
+    if (cmd === 'sudo') {
+      print('<span class="err">vetmo is not in the sudoers file. This incident will be reported.</span>');
+      return;
+    }
+    if (cmd === 'whoami') {
+      print('<span class="gold">vetmo</span> <span class="dim">из секты «Работает — не трогай»</span>');
+      return;
+    }
+    if (cmd === 'ls') {
+      print('<span class="blue">about/  projects/  contact/  .secrets/  imperial_truth.pdf</span>');
+      return;
+    }
+    if (cmd === 'help') {
+      output.innerHTML = '';
+      typeSection(SECTIONS.help());
+      return;
+    }
+    if (cmd === 'about') {
+      output.innerHTML = '';
+      typeSection(SECTIONS.about());
+      return;
+    }
+    if (cmd === 'projects') {
+      output.innerHTML = '';
+      typeSection(SECTIONS.projects());
+      return;
+    }
+    if (cmd === 'contact') {
+      output.innerHTML = '';
+      typeContact();
+      return;
+    }
 
     print('<span class="err">bash: ' + esc(cmd) + ': команда не найдена</span> <span class="dim">— введите</span> <span class="ok">help</span>');
   }
 
+  function typeContact() {
+    var sec = SECTIONS.contact();
+    typeSection(sec.lines, function () {
+      // после текста — интерактивная сетка соцкнопок
+      var grid = document.createElement('div');
+      grid.className = 'social-grid';
+      grid.innerHTML = [
+        '<a class="social-btn" href="https://github.com/aitools1" target="_blank" rel="noopener"><span class="sym">&gt;_</span> GitHub</a>',
+        '<a class="social-btn gold" href="mailto:devprotonme1@proton.me"><span class="sym">@</span> Mail</a>',
+        '<a class="social-btn" href="https://aitools1.github.io/portfolio/" target="_blank" rel="noopener"><span class="sym">~</span> Portfolio</a>'
+      ].join('');
+      printNode(grid);
+    });
+  }
+
   // Tab-автодополнение
+  var nameList = ['help', 'about', 'projects', 'contact', 'clear', 'exit', 'sudo', 'whoami', 'ls'];
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       run(input.value);
@@ -318,7 +634,7 @@
     } else if (e.key === 'Tab') {
       var v = input.value.trim().toLowerCase();
       if (v) {
-        var match = names.concat(Object.keys(COMMANDS)).filter(function (n) { return n.indexOf(v) === 0; });
+        var match = nameList.filter(function (n) { return n.indexOf(v) === 0; });
         if (match.length === 1) { input.value = match[0]; }
         else if (match.length > 1) { print('<span class="dim">' + match.join('  ') + '</span>'); }
       }
@@ -329,6 +645,29 @@
   // Клик по экрану — фокус в ввод
   document.querySelector('.terminal').addEventListener('click', function (e) {
     if (window.getSelection().toString()) return;
+    input.focus({ preventScroll: true });
+  });
+
+  // ===== Кликабельные чипы =====
+  var chipsEl = document.getElementById('chips');
+
+  chipsEl.addEventListener('click', function (e) {
+    var btn = e.target.closest('.chip');
+    if (!btn) return;
+    e.stopPropagation();
+    if (btn.dataset.url) {
+      printPrompt(btn.dataset.label);
+      print('<span class="dim">открываю </span><a href="' + btn.dataset.url + '" target="_blank" rel="noopener">' + esc(btn.dataset.url) + '</a>');
+      window.open(btn.dataset.url, '_blank', 'noopener');
+    } else {
+      run(btn.dataset.cmd);
+    }
+    input.focus({ preventScroll: true });
+  });
+
+  // CTA-кнопка в карточке профиля
+  document.getElementById('cta-about').addEventListener('click', function () {
+    run('about');
     input.focus({ preventScroll: true });
   });
 
@@ -368,8 +707,9 @@
       last.innerHTML = 'введите <span class="ok">help</span>, чтобы посмотреть доступные команды';
       typing = false;
       inputLine.style.display = 'flex';
+      document.getElementById('chips').style.display = 'flex';
       input.focus();
-      run('about');
+      run('about');   // стартовая секция печатается тем же эффектом
     }
   }
 
