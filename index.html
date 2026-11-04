@@ -156,6 +156,33 @@
     caret-color: transparent;
   }
 
+  /* ===== Тикер активности (в духе zed.dev) ===== */
+  .feed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+  }
+  .feed .dot-feed {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 6px var(--ok);
+    flex: 0 0 6px;
+    animation: feed-pulse 2s ease-in-out infinite;
+  }
+  @keyframes feed-pulse { 50% { opacity: 0.35; } }
+  .feed .repo { color: var(--accent); }
+  .feed .msg { overflow: hidden; text-overflow: ellipsis; }
+  .feed .time { margin-left: auto; flex: 0 0 auto; }
+  .feed .msg, .feed .repo, .feed .time { transition: opacity .35s ease; }
+  .feed.switching .msg, .feed.switching .repo, .feed.switching .time { opacity: 0; }
+
   /* ===== Кликабельные чипы-команды ===== */
   .chips {
     display: flex;
@@ -375,6 +402,12 @@
       <button class="chip" data-cmd="help">справка</button>
       <button class="chip" data-cmd="clear">очистить</button>
       <button class="chip gold" data-url="https://github.com/aitools1" data-label="github">github ↗</button>
+    </div>
+    <div class="feed" id="feed" style="display:none">
+      <span class="dot-feed"></span>
+      <span class="repo">~</span>
+      <span class="msg"></span>
+      <span class="time"></span>
     </div>
   </div>
 </div>
@@ -760,6 +793,69 @@
     run('about');
     if (!isTouch) input.focus({ preventScroll: true });
   });
+
+  // ===== Тикер активности (в духе zed.dev) =====
+  (function () {
+    var feed = document.getElementById('feed');
+    var repoEl = feed.querySelector('.repo');
+    var msgEl = feed.querySelector('.msg');
+    var timeEl = feed.querySelector('.time');
+
+    // события — реальные коммиты недели (репозиторий, сообщение)
+    var events = [
+      ['whoami',        'rebrand to whoami'],
+      ['whoami',        'fix html entity rendering in typewriter'],
+      ['whoami',        'mobile keyboard focus, smooth autoscroll'],
+      ['whoami',        'interactive code-glyph background with cursor glow'],
+      ['whoami',        'initial portfolio site - terminal style'],
+      ['ChaosMarineMod', 'переделан на систему модов Owlcat'],
+      ['zomboid-save-guard', 'backup rotation and restore guard']
+    ];
+
+    var start = new Date();
+    var idx = 0;
+
+    function ago(sec) {
+      if (sec < 60) return sec + 's';
+      if (sec < 3600) return Math.floor(sec / 60) + 'm';
+      return Math.floor(sec / 3600) + 'h';
+    }
+
+    function show() {
+      var e = events[idx % events.length];
+      var offset = 4 + idx * 7 + (Math.random() * 5 | 0);   // «возраст» события, мин
+      repoEl.textContent = e[0];
+      msgEl.textContent = e[1];
+      timeEl.textContent = ago(offset * 60 + Math.floor((Date.now() - start) / 1000));
+    }
+
+    function tick() {
+      // пересчитываем время «сейчас» без смены события
+      timeEl.textContent = timeEl.textContent.replace(/^\d+[smh]/, function (m) {
+        var unit = m.slice(-1);
+        var v = parseInt(m, 10) + 1;
+        if (unit === 's' && v >= 60) return '1m';
+        if (unit === 'm' && v >= 60) return '1h';
+        return v + unit;
+      });
+    }
+
+    function next() {
+      feed.classList.add('switching');
+      setTimeout(function () {
+        idx++;
+        show();
+        feed.classList.remove('switching');
+      }, 350);
+    }
+
+    show();
+    feed.style.display = 'flex';
+
+    // shortcut: тикер псевдо-статический (события зашиты, время тикает), живой GitHub API не тянет; когда захочется реальный feed — заменить events на fetch к /users/aitools1/events
+    setInterval(tick, 30000);
+    setInterval(next, 9000);
+  })();
 
   // ===== Boot-последовательность =====
 
