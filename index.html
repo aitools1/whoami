@@ -478,42 +478,64 @@
       // Набираем через append в конец el, без чтения innerHTML (иначе повторное экранирование).
       var tail = el.lastChild;
 
+      // декодер HTML-сущностей (&gt; -> >, &amp; -> &)
+      var decoder = document.createElement('textarea');
+
+      function decode(s) {
+        decoder.innerHTML = s;
+        return decoder.value;
+      }
+
       function appendText(ch) {
         if (tail && tail.nodeType === 3) { tail.textContent += ch; }
         else { tail = document.createTextNode(ch); el.appendChild(tail); }
       }
 
-      function step() {
-        var rest = html.substring(pos);
-        var m = /^<[^>]+>/.exec(rest);
-        if (m) {
-          var holder = document.createElement('span');
-          holder.innerHTML = m[0];
-          // заменяем на живые узлы, чтобы текст добавлялся внутрь тега корректно
-          while (holder.firstChild) {
-            el.appendChild(holder.firstChild);
-            if (holder.firstChild) { /* несколько узлов внутри тега не бывает: тег один */ }
+      // Преобразуем html в очередь: {tag} или {ch}; HTML-сущности декодируем (&gt; -> >)
+      function buildQueue(html) {
+        var q = [];
+        var i = 0;
+        while (i < html.length) {
+          if (html.charAt(i) === '<') {
+            var close = html.indexOf('>', i);
+            if (close === -1) { break; }
+            q.push({ tag: html.substring(i, close + 1) });
+            i = close + 1;
+          } else {
+            var nextTag = html.indexOf('<', i);
+            var chunk = nextTag === -1 ? html.substring(i) : html.substring(i, nextTag);
+            var decoded = decode(chunk);
+            for (var c = 0; c < decoded.length; c++) {
+              q.push({ ch: decoded.charAt(c) });
+            }
+            i = nextTag === -1 ? html.length : nextTag;
           }
-          // запоминаем последний текстовый узел для продолжения набора внутри тега
+        }
+        return q;
+      }
+
+      var queue = buildQueue(html);
+      var pos = 0;
+
+      function step() {
+        if (pos >= queue.length) { finish(); return; }
+        var item = queue[pos];
+        if (item.tag) {
+          var holder = document.createElement('span');
+          holder.innerHTML = item.tag;
+          while (holder.firstChild) { el.appendChild(holder.firstChild); }
           var nodes = el.childNodes;
+          tail = null;
           for (var k = nodes.length - 1; k >= 0; k--) {
             if (nodes[k].nodeType === 3) { tail = nodes[k]; break; }
-            if (nodes[k].nodeType === 1) { tail = null; break; }
           }
-          pos += m[0].length;
+          pos++;
           if (speed === Infinity) { finish(); return; }
           setTimeout(step, 0);
           return;
         }
-        var nextTag = rest.indexOf('<');
-        var plain = nextTag === -1 ? rest : rest.substring(0, nextTag);
-        if (plain.length === 0) {
-          if (nextTag === -1) { finish(); return; }
-          step();
-          return;
-        }
-        appendText(plain.charAt(0));
-        pos += 1;
+        appendText(item.ch);
+        pos++;
         if (speed === Infinity) { finish(); return; }
         setTimeout(function () {
           if (token !== typingToken) { return; }
@@ -523,10 +545,17 @@
 
       function finish() {
         // добить оставшееся мгновенно (для instant-строк)
-        var rest2 = html.substring(pos);
-        var tmp = document.createElement('span');
-        tmp.innerHTML = rest2;
-        while (tmp.firstChild) el.appendChild(tmp.firstChild);
+        while (pos < queue.length) {
+          var it = queue[pos];
+          if (it.tag) {
+            var h = document.createElement('span');
+            h.innerHTML = it.tag;
+            while (h.firstChild) { el.appendChild(h.firstChild); }
+          } else {
+            appendText(it.ch);
+          }
+          pos++;
+        }
         cb();
       }
 
